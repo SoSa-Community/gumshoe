@@ -28,8 +28,17 @@ abstract class ControllerBase extends Controller{
 		
 		if(!empty($sessionId)){
 			try{
-				$_REQUEST['loggedin'] = true;
-				$_REQUEST['_user'] = ['id' => 1];
+				//TODO: Implement Auth
+				if($sessionId === '1'){
+					$_REQUEST['_user'] = ['id' => 1, 'admin' => false];
+				}
+				elseif($sessionId === '2'){
+					$_REQUEST['_user'] = ['id' => 1, 'admin' => true];
+				}
+				elseif($sessionId === '3'){
+					$_REQUEST['_user'] = ['id' => 3, 'admin' => false];
+				}
+				
 			}catch(\Exception $e){
 				error_log($e);
 			}

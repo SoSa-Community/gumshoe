@@ -59,4 +59,71 @@ class Ticket extends ControllerBase{
 		
 		echo $this::generateResponse($status, $responseData, $error);
 	}
+	
+	/**
+	 * @post("ticket/update")
+	 */
+	public function updateTicket()
+	{
+		
+		$responseData = null;
+		$status = 'failure';
+		$error = new \Error('Not logged in', 1);
+		
+		$request = $_POST;
+		
+		if($_REQUEST['_user']){
+			$userId = $_REQUEST['_user']['id'];
+			$isAdmin = $_REQUEST['_user']['admin'];
+			
+			$ticketId = $request['id'] ?? null;
+			$description = $request['description'] ?? null;
+			$ownerId = $request['owner_id'] ?? null;
+			$privacy = $request['privacy'] ?? null;
+			
+			if(!empty($ownerId)) $ownerId = intval($ownerId);
+			
+			if(empty($ticketId)){
+				$error = new \Error('Please provide a ticket id', 2);
+			}elseif(empty($description) && empty($ownerId) && empty($privacy)){
+				$error = new \Error('Please provide something to change!', 3);
+			}else{
+				$ticket = DAO::getOne(\models\Ticket::class, 'id = ?', false, [$ticketId]);
+				if(empty($ticket)){
+					$error = new \Error('Ticket does not exist', 4);
+				}else{
+					$lockMode = $ticket->getLockMode();
+					
+					$isOwner = ($userId === $ticket->getOwnerId());
+					$isCreator = ($userId === $ticket->getCreatorId());
+					
+					if(!$isOwner && !$isCreator && !$isAdmin){
+						$error = new \Error('You don\'t have permission to change this ticket', 5);
+					}elseif($lockMode == 'full' && !$isAdmin){
+						$error = new \Error('You don\'t have permission to change this ticket', 6);
+					}
+					else{
+						if(!empty($description))    $ticket->setDescription($description);
+						if(!empty($ownerId))        $ticket->setOwnerId($ownerId);
+						if(!empty($privacy)){
+							if(!$ticket->setPrivacy($privacy)){
+								$error = new \Error('Please provide a valid value for privacy', 7);
+							}
+						}
+						
+						if(DAO::save($ticket)){
+							$error = null;
+							$status = 'success';
+							$responseData = ['ticket' => $ticket->getPublicOutput()];
+						}
+					}
+				}
+			}
+		}
+		
+		echo $this::generateResponse($status, $responseData, $error);
+		
+		
+	}
+	
 }

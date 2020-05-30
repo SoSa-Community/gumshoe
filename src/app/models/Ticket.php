@@ -37,12 +37,12 @@ class Ticket{
 	/**
 	 * @column("name"=>"creator_id")
 	 */
-	private string $creatorId = '';
+	private int $creatorId = 0;
 	
 	/**
 	 * @column("name"=>"owner_id")
 	 */
-	private string $ownerId = '';
+	private int $ownerId = 0;
 	
 	private string $created = '';
 	private string $updated = '';
@@ -63,7 +63,13 @@ class Ticket{
 	public function setTypeId($typeId){$this->typeId = $typeId;}
 	
 	public function getPrivacy(){return $this->privacy;}
-	public function setPrivacy($privacy){$this->privacy = $privacy;}
+	public function setPrivacy($privacy){
+		if(in_array($privacy,['private','public'])){
+			$this->privacy = $privacy;
+			return true;
+		}
+		return false;
+	}
 	
 	public function getLockMode(){return $this->lockMode;}
 	public function setLockMode($lockMode){$this->lockMode = $lockMode;}
